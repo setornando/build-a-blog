@@ -19,21 +19,47 @@ class Blog(db.Model):
         self.title = title
         self.body = body
 
+    def is_valid(self):
+
+        if self.title and self.body:
+            return True
+        else:
+            return False
+
 @app.route('/', methods=['POST','GET'])
 def index():
     return redirect("/blog")
 
 @app.route('/blog', methods=['POST','GET'])
 def blog():
-    entry_id = request.args.get('id')
-    blog_posts = Blog.query.all()
-    if entry_id:
-        blog_post = Blog.query.filter_by(id=entry_id).first()
-        return render_template('blog.html', title="Build A Blog", blog_post=blog_posts)
-    return render_template("blog.html", title="Build A Blog", blog_posts=blog_posts)
+    post_id = request.args.get('id')
+    if post_id:
+        blog = Blog.query.filter_by(id=post_id).first()
+        return render_template('individualblog.html', title=blog.title, body=blog.body)
+    else:
+        posts = Blog.query.all()
+        return render_template("blog.html", title="Build A Blog", posts=posts)
 
+@app.route('/newpost', methods=['POST','GET'])
+def newpost():
+    if request.method == 'POST':
+        blog_title = request.form['title']
+        blog_body = request.form['body']
+        new_post = Blog(blog_title, blog_body)
 
-#@app.route('/newpost', methods=['POST','GET'])
+        if new_post.is_valid():
+            db.session.add(new_post)
+            db.session.commit()
+            url = '/blog?id=' + str(new_post.id)
+            return redirect(url)
+        else:
+            flash("Both a title and body are required for the blog.")
+            return render_template('newpost.html',
+            title='Add A Blog Entry', 
+            blog_title=blog_title, 
+            blog_body=blody_body)
+    else:
+        return render_template('newpost.html', title='Add a  Blog Entry')
 
 if __name__ == '__main__':
     app.run()
