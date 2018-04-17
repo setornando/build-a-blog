@@ -5,8 +5,8 @@
     {% if posts|length == 0 %}
         <p>No Posts Yet</p>
     {% else %}
-        {% for blog_posts in blog_posts %}
-        <h2><a href="/blog?id={{post.id}}{{post.title}}"></a></h2>
+        {% for post in posts %}
+        <h2><a href="/blog?id={{post.id}}">{{post.title}}</a></h2>
         <p>{{post.body}}</p>
         {% endfor %}
     {% endif %}

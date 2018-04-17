@@ -19,47 +19,43 @@ class Blog(db.Model):
         self.title = title
         self.body = body
 
-    def is_valid(self):
-
-        if self.title and self.body:
-            return True
-        else:
-            return False
-
 @app.route('/', methods=['POST','GET'])
 def index():
     return redirect("/blog")
 
 @app.route('/blog', methods=['POST','GET'])
 def blog():
-    post_id = request.args.get('id')
-    if post_id:
-        blog = Blog.query.filter_by(id=post_id).first()
-        return render_template('individualblog.html', title=blog.title, body=blog.body)
-    else:
-        posts = Blog.query.all()
-        return render_template("blog.html", title="Build A Blog", posts=posts)
+    blog_id = request.args.get('id')
+    posts = Blog.query.all()
+    if blog_id:
+        post = Blog.query.filter_by(id=blog_id).first()
+        return render_template('singlepost.html', title=post.title, body=post.body)
+    return render_template('blog.html', posts=posts)
 
 @app.route('/newpost', methods=['POST','GET'])
+
 def newpost():
     if request.method == 'POST':
-        blog_title = request.form['title']
-        blog_body = request.form['body']
-        new_post = Blog(blog_title, blog_body)
-
-        if new_post.is_valid():
-            db.session.add(new_post)
+        title = request.form['title']
+        body = request.form['body']
+        title_error = False
+        body_error = False
+        if title == "":
+            flash("Enter a blog title")
+            title_error = True
+        if body == "":
+            flash("Enter blog content")
+            body_error = True
+        if not title_error and not body_error:
+            newpost = Blog(title, body)
+            db.session.add(newpost)
             db.session.commit()
-            url = '/blog?id=' + str(new_post.id)
-            return redirect(url)
+            post_id = newpost.id
+            post_url = '/blog?id=' + str(post_id)
+            return redirect(post_url)
         else:
-            flash("Both a title and body are required for the blog.")
-            return render_template('newpost.html',
-            title='Add A Blog Entry', 
-            blog_title=blog_title, 
-            blog_body=blody_body)
-    else:
-        return render_template('newpost.html', title='Add a  Blog Entry')
+            return render_template('newpost.html', title=title, body=body)
+    return render_template('newpost.html')
 
 if __name__ == '__main__':
     app.run()
